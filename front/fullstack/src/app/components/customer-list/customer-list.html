@@ -1,0 +1,29 @@
+<p>customer-list:</p>
+
+<a class="btn btn-primary" routerLink="/customers/add">Create customer</a>
+<table class="table">
+  <thead>
+    <tr>
+      <th scope="col">ID</th>
+      <th scope="col">Name</th>
+      <th scope="col">Last name</th>
+      <th scope="col">email</th>
+      <th scope="col">Delete</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr *ngFor="let c of customers$ | async">
+      <th scope="row">{{c.id}}</th>
+      <td>{{c.firstName}}</td>
+      <td>{{c.lastName}}</td>
+      <td>{{c.email}}</td>
+      <td> <button class="btn btn-danger" (click)="deleteCustomer(c.id)"></button></td>
+    </tr>
+  </tbody>
+</table>
+
+<ul>
+    <li *ngFor="let c of customers$ | async">
+        {{c.id}} - {{c.firstName}} - {{c.lastName}} - {{c.email}}
+    </li>
+</ul>

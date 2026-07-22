@@ -1,0 +1,42 @@
+services:
+  mysql:
+    image: mysql:8.0
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_DATABASE: customer_management
+    ports:
+      - "3307:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-ppassword"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    build:
+      context: ./crud-fullstack-angular
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/customer_management
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: password
+    ports:
+      - "8080:8080"
+    depends_on:
+      mysql:
+        condition: service_healthy
+
+  frontend:
+    build:
+      context: ./front/fullstack
+    environment:
+      PORT: 4000
+      API_URL_SERVER: http://backend:8080/api/customers
+    ports:
+      - "4200:4000"
+    depends_on:
+      - backend
+
+volumes:
+  mysql_data:
