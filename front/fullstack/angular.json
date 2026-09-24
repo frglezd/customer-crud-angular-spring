@@ -43,7 +43,7 @@
             "server": "src/main.server.ts",
             "outputMode": "server",
             "security": {
-              "allowedHosts": ["localhost"]
+              "allowedHosts": ["localhost", "customer-crud-angular-spring-frontend-757406003866.europe-west1.run.app"]
             },
             "ssr": {
               "entry": "src/server.ts"
