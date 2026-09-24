@@ -11,13 +11,12 @@ export class CustomerService {
   private api : string;
 
   constructor(private http : HttpClient, @Inject(PLATFORM_ID) platformId: object){
-    // Server-side rendering runs inside the frontend container, so 'localhost' won't
-    // reach the backend container - it needs the Docker network service name instead.
-    // The browser always uses the published host port.
-    const serverApiUrl = isPlatformServer(platformId) && typeof process !== 'undefined'
-      ? process.env['API_URL_SERVER']
-      : undefined;
-    this.api = serverApiUrl ?? 'http://localhost:8080/api/customers';
+    // Server-side rendering calls the backend directly (API_URL_SERVER: the Docker
+    // service name or the Cloud Run URL). The browser calls /api on this same server,
+    // which forwards it to the backend (see server.ts).
+    this.api = isPlatformServer(platformId) && typeof process !== 'undefined'
+      ? process.env['API_URL_SERVER'] ?? 'http://localhost:8080/api/customers'
+      : '/api/customers';
   }
   
   getCustomerList(): Observable<Customer []>{

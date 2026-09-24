@@ -10,19 +10,38 @@ import { join } from 'node:path';
 const browserDistFolder = join(import.meta.dirname, '../browser');
 
 const app = express();
-const angularApp = new AngularNodeAppEngine();
+// Cloud Run's front end adds these headers to every request; without trusting
+// them Angular skips SSR and falls back to client-side rendering.
+const angularApp = new AngularNodeAppEngine({
+  trustProxyHeaders: ['x-forwarded-for', 'x-forwarded-proto'],
+});
 
 /**
- * Example Express Rest API endpoints can be defined here.
- * Uncomment and define endpoints as necessary.
- *
- * Example:
- * ```ts
- * app.get('/api/{*splat}', (req, res) => {
- *   // Handle API request
- * });
- * ```
+ * Forward /api requests to the backend, so the browser only ever talks to this
+ * server and needs no backend URL or CORS setup.
  */
+const backendOrigin = new URL(
+  process.env['API_URL_SERVER'] ?? 'http://localhost:8080/api/customers',
+).origin;
+
+app.use('/api', express.raw({ type: '*/*' }), async (req, res, next) => {
+  try {
+    const hasBody = !['GET', 'HEAD'].includes(req.method) && Buffer.isBuffer(req.body);
+    const response = await fetch(backendOrigin + req.originalUrl, {
+      method: req.method,
+      headers: req.headers['content-type'] ? { 'content-type': req.headers['content-type'] } : {},
+      body: hasBody ? req.body : undefined,
+    });
+    res.status(response.status);
+    const contentType = response.headers.get('content-type');
+    if (contentType) {
+      res.type(contentType);
+    }
+    res.send(Buffer.from(await response.arrayBuffer()));
+  } catch (error) {
+    next(error);
+  }
+});
 
 /**
  * Serve static files from /browser
